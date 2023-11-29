@@ -11,6 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(client)
 add_executable(server)
 
+include_directories(include)
 add_subdirectory(include)
 add_subdirectory(src)
 
