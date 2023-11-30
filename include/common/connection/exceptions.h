@@ -5,5 +5,6 @@
 
 class ConnectionClosedException: public AppException {using AppException::AppException;};
 class SocketCreationException: public AppException {using AppException::AppException;};
+class SocketOptionChangeException: public AppException {using AppException::AppException;};
 
 #endif

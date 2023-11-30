@@ -10,7 +10,7 @@ using namespace std;
 int main() {
   auto listener = TCPListener(27015);
   auto server = make_unique<PasiveStartedConnection>(listener);
-  unique_ptr<AbstractWriteType> write_type = make_unique<ImageWriteType>("/home/georgerapeanu/Desktop/tmp/ftp_testing/othello.cpp");
+  unique_ptr<AbstractWriteType> write_type = make_unique<ImageWriteType>("/home/georgerapeanu/Desktop/tmp/ftp_testing/a.out");
 
   StreamMode::recv(move(server), move(write_type));
   return 0;

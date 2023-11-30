@@ -7,6 +7,12 @@
 
 class ActiveStartedConnection: public AbstractConnection{ 
 public: 
+  /* 
+   * Constructor for active started connection
+   * @param host the host to connect to
+   * @param port the port on the host to connect to
+   * @throws SocketCreationException if socket creation fails
+   */
   ActiveStartedConnection(const std::string& host, uint16_t port);
   ActiveStartedConnection(const AbstractConnection& other) = delete;
   ActiveStartedConnection& operator = (const ActiveStartedConnection& other) = delete;

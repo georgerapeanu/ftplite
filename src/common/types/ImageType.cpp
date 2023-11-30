@@ -6,12 +6,18 @@
 #include <cstring>
 
 ImageReadType::~ImageReadType() {
-  free(this->buffer);
+  if(this->buffer != NULL) {
+    free(this->buffer);
+  }
   AbstractReadType::~AbstractReadType();
 }
 
 ImageReadType::ImageReadType(const std::string& path) {
+  this->buffer = NULL;
   this->fd = open(path.c_str(), O_RDONLY);
+  if(this->fd == -1) {
+    throw ReadFileException("Error when attempting to open read file");
+  }
   this->buffer_pos = 0;
   this->buffer_len = 0;
   this->buffer = (unsigned char*)malloc(BUFFER_SIZE);
@@ -44,7 +50,7 @@ ImageReadType& ImageReadType::operator = (ImageReadType&& other) {
 
 unsigned char ImageReadType::read_next_byte() {
   if(this->fd == -1) {
-    throw TypeIterationEndedException("Attempt to read from closed file");
+    throw ReadFileException("Attempt to read from closed file");
   }
 
   if(this->buffer_pos == this->buffer_len) {
@@ -68,11 +74,20 @@ ImageWriteType::~ImageWriteType() {
   if(this->buffer_pos != 0) {
     write(this->fd, this->buffer, this->buffer_pos);
   }
+  if(this->buffer != NULL) {
+    free(this->buffer);
+  }
   AbstractWriteType::~AbstractWriteType();
 }
 
 ImageWriteType::ImageWriteType(const std::string& path) {
+  this->buffer = NULL;
   this->fd = open(path.c_str(), O_WRONLY | O_CREAT);
+
+  if(this->fd == -1) {
+    throw WriteFileException("Error opening write file");
+  }
+
   this->buffer_pos = 0;
   this->buffer = (unsigned char*)malloc(BUFFER_SIZE);
   memset(this->buffer, 0, BUFFER_SIZE);

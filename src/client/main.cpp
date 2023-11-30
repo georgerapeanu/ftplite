@@ -8,7 +8,7 @@ using namespace std;
 
 int main() {
   unique_ptr<AbstractConnection> client = make_unique<ActiveStartedConnection>("localhost", 27015);
-  unique_ptr<AbstractReadType> read_type = make_unique<ImageReadType>("/home/georgerapeanu/Desktop/tmp/othello.cpp");
+  unique_ptr<AbstractReadType> read_type = make_unique<ImageReadType>("/home/georgerapeanu/Desktop/tmp/a.out");
 
   StreamMode::send(move(client), move(read_type));
   return 0;
