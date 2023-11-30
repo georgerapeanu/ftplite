@@ -1,5 +1,5 @@
 #include "common/connection/ActiveStartedConnection.h"
-#include "common/exceptions.h"
+#include "common/connection/exceptions.h"
 #include <string>
 #include <unistd.h>
 #include <sys/types.h>

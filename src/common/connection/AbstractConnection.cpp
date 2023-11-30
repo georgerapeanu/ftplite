@@ -1,5 +1,5 @@
 #include "common/connection/AbstractConnection.h"
-#include "common/exceptions.h"
+#include "common/connection/exceptions.h"
 #include <string>
 #include <unistd.h>
 #include <sys/types.h>
@@ -7,7 +7,7 @@
 
 AbstractConnection::AbstractConnection() {}
 
-size_t AbstractConnection::read(char* buff, size_t len) {
+size_t AbstractConnection::read(void* buff, size_t len) {
   if(this->fd == -1) {
     throw ConnectionClosedException("Attempt to read from a closed connection");
   }
@@ -28,7 +28,7 @@ size_t AbstractConnection::read(char* buff, size_t len) {
   return (size_t)cnt;
 }
 
-size_t AbstractConnection::write(const char* buff, size_t len) {
+size_t AbstractConnection::write(const void* buff, size_t len) {
   if(this->fd == -1) {
     throw ConnectionClosedException("Attempt to write from a closed connection");
   }

@@ -13,10 +13,10 @@ public:
   AbstractConnection& operator = (const AbstractConnection& other) = delete;
   AbstractConnection(AbstractConnection&& other);
   AbstractConnection& operator = (AbstractConnection&& other);
-  virtual ~AbstractConnection();
+  virtual ~AbstractConnection() = 0;
 
-  size_t read(char* buff, size_t count);
-  size_t write(const char* buff, size_t count);
+  size_t read(void* buff, size_t count);
+  size_t write(const void* buff, size_t count);
 };
 
 #endif

@@ -1,17 +1,15 @@
 #include "common/connection/ActiveStartedConnection.h"
+#include "common/types/ImageType.h"
+#include "common/modes/StreamMode.h"
 #include <iostream>
+#include <memory>
 
 using namespace std;
 
 int main() {
-  ActiveStartedConnection client("localhost", 27015);
+  unique_ptr<AbstractConnection> client = make_unique<ActiveStartedConnection>("localhost", 27015);
+  unique_ptr<AbstractReadType> read_type = make_unique<ImageReadType>("/home/georgerapeanu/Desktop/tmp/othello.cpp");
 
-  char msg[2048];
-
-  client.write("hello from client", 16);
-  size_t cnt = client.read(msg, 2048);
-  msg[cnt] = 0;
-
-  cout << msg;
+  StreamMode::send(move(client), move(read_type));
   return 0;
 }

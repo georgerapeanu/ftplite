@@ -1,20 +1,17 @@
-#include <iostream>
-#include "common/connection/TCPListener.h"
 #include "common/connection/PasiveStartedConnection.h"
+#include "common/connection/TCPListener.h"
+#include "common/types/ImageType.h"
+#include "common/modes/StreamMode.h"
+#include <iostream>
+#include <memory>
 
 using namespace std;
 
 int main() {
-  TCPListener listener(27015);
-  PasiveStartedConnection server(listener);
+  auto listener = TCPListener(27015);
+  auto server = make_unique<PasiveStartedConnection>(listener);
+  unique_ptr<AbstractWriteType> write_type = make_unique<ImageWriteType>("/home/georgerapeanu/Desktop/tmp/ftp_testing/othello.cpp");
 
-  char msg[2048];
-
-  server.write("hello from server", 16);
-  size_t cnt = server.read(msg, 2048);
-  msg[cnt] = 0;
-
-  cout << msg;
+  StreamMode::recv(move(server), move(write_type));
   return 0;
 }
-
