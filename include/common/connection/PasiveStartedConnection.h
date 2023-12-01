@@ -13,7 +13,7 @@ public:
    * @param tcp_listener the tcp listener used to create connection
    * @throws SocketCreationException if socket creation fails
    */
-  PasiveStartedConnection(const TCPListener& tcp_listener);
+  PasiveStartedConnection(const TCPListener& tcp_listener, int timeout = -1);
   PasiveStartedConnection(const PasiveStartedConnection& other) = delete;
   PasiveStartedConnection& operator = (const PasiveStartedConnection& other) = delete;
 

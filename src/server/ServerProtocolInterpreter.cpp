@@ -337,7 +337,7 @@ void ServerProtocolInterpreter::handle_retr_command(const vector<string>& args) 
     if(this->data_listener == nullopt) {
       connection = make_unique<ActiveStartedConnection>(client_sock_addr);
     } else {
-      connection = make_unique<PasiveStartedConnection>(*this->data_listener);
+      connection = make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
     }
   } catch(SocketCreationException& ex) {
     this->connection->send_next_command("425 Can't open data connection.");
@@ -368,7 +368,7 @@ void ServerProtocolInterpreter::handle_stor_command(const vector<string>& args) 
     switch(this->type) {
       case IMAGE: write_type = make_unique<ImageWriteType>(args[1]);break;
     } 
-  } catch(const ReadFileException& ex) {
+  } catch(const WriteFileException& ex) {
     this->connection->send_next_command("550 Requested action not taken. File unavailable.");
     return ;
   }
@@ -379,8 +379,8 @@ void ServerProtocolInterpreter::handle_stor_command(const vector<string>& args) 
       this->connection->send_next_command("150 File status ok; about to open data connection");
       connection = make_unique<ActiveStartedConnection>(client_sock_addr);
     } else {
+      connection = make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
       this->connection->send_next_command("150 File status ok; Ok to send data");
-      connection = make_unique<PasiveStartedConnection>(*this->data_listener);
     }
   } catch(SocketCreationException& ex) {
     this->connection->send_next_command("425 Can't open data connection.");

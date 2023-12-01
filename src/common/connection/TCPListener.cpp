@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 
 TCPListener::TCPListener(std::unique_ptr<sockaddr, std::function<void (sockaddr*)>> &sock_addr) {
-  this->fd = socket(AF_INET, SOCK_STREAM, 0);
+  this->fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
   if(this->fd == -1) {
     throw SocketCreationException("Error creating socket");
   }
@@ -26,10 +26,16 @@ TCPListener::TCPListener(std::unique_ptr<sockaddr, std::function<void (sockaddr*
     throw SocketCreationException("Error querying socket");
   }
   this->port = ntohs(server_addr.sin_port);
+
+  if(listen(this->fd, 5) != 0) {
+    close(this->fd);
+    this->fd = -1;
+    throw SocketCreationException("Error listening on socket");
+  }
 }
 
 TCPListener::TCPListener(uint16_t port) {
-  this->fd = socket(AF_INET, SOCK_STREAM, 0);
+  this->fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
   if(this->fd == -1) {
     throw SocketCreationException("Error creating socket");
   }
@@ -50,6 +56,12 @@ TCPListener::TCPListener(uint16_t port) {
     throw SocketCreationException("Error querying socket");
   }
   this->port = ntohs(server_addr.sin_port);
+  
+  if(listen(this->fd, 5) != 0) {
+    close(this->fd);
+    this->fd = -1;
+    throw SocketCreationException("Error listening on socket");
+  }
 }
 
 TCPListener::TCPListener(TCPListener&& other) {
