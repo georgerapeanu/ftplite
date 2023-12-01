@@ -11,6 +11,7 @@
 using namespace std;
 
 PasiveStartedConnection::PasiveStartedConnection(const TCPListener& tcp_listener, int timeout) {
+  this->fd = -1;
   if(tcp_listener.getFd() == -1) {
     throw SocketCreationException("Attempt to accept on -1 socket");
   }

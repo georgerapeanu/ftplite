@@ -61,6 +61,11 @@ public:
    */
   std::unique_ptr<sockaddr, std::function<void(sockaddr*)>> getPeerSockAddr() const ;
 
+  /*
+   * This function is to be called when this connection was moved to child. This is done to prevent shutdown of the connection.
+   *
+   */
+  void move_to_child();
 };
 
 #endif

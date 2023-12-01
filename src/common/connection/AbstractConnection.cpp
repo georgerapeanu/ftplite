@@ -137,3 +137,6 @@ unique_ptr<sockaddr, function<void(sockaddr*)>> AbstractConnection::getPeerSockA
   return sock_addr;
 }
 
+void AbstractConnection::move_to_child() {
+  this->fd = -1;
+}

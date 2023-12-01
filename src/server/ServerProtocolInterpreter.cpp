@@ -441,7 +441,6 @@ void ServerProtocolInterpreter::run() {
   }
   catch(const AppException& ex) {
     cerr << ex.what() << "\n";
-    exit(0);
   }
 }
 
