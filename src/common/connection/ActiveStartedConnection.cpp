@@ -9,6 +9,21 @@
 
 using namespace std;
 
+ActiveStartedConnection::ActiveStartedConnection(std::unique_ptr<sockaddr> sock_addr) {
+  const sockaddr* sock_addr_c_ptr = sock_addr.get();
+  this->fd = socket(AF_INET, SOCK_STREAM, 0);
+  if(this->fd == -1) {
+    throw SocketCreationException("Error creating socket");
+  }
+  int status = connect(this->fd, sock_addr_c_ptr, sizeof(sockaddr));
+
+  if(status == -1) {
+    close(this->fd);
+    this->fd = -1;
+    throw SocketCreationException("Error connecting with socket");
+  }
+}
+
 ActiveStartedConnection::ActiveStartedConnection(const string& host, uint16_t port) {
   this->fd = -1;
 

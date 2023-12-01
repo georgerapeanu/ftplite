@@ -3,7 +3,7 @@ project(ftplite)
 
 set(target "common")
 add_library(${target})
-
+target_sources(${target} PRIVATE CommunicationWrapper.cpp)
 
 add_subdirectory(connection)
 add_subdirectory(modes)

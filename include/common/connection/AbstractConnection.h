@@ -1,7 +1,10 @@
 #ifndef ABSTRACT_CONNECTION_H
 #define ABSTRACT_CONNECTION_H
 
+#include <memory>
+#include <sys/socket.h>
 #include <sys/types.h>
+#include <functional>
 
 /*
  * @class AbstractConnection: Abstract class for manaing TCP connections
@@ -46,6 +49,18 @@ public:
    * @throws ConnectionClosedException if connection closes
    */
   size_t write(const void* buff, size_t count);
+
+  /*
+   * @return the current side of the connection's sockaddr
+   * @throws SockAddrException if syscall goes wrong
+   */
+  std::unique_ptr<sockaddr, std::function<void(sockaddr*)>> getSocketSockAddr() const ;
+  /*
+   * @return the other side of the connection's sockaddr
+   * @throws SockAddrException if syscall goes wrong
+   */
+  std::unique_ptr<sockaddr, std::function<void(sockaddr*)>> getPeerSockAddr() const ;
+
 };
 
 #endif

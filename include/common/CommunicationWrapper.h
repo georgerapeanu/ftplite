@@ -21,6 +21,10 @@ class CommunicationWrapper {
 
 public:
   CommunicationWrapper(std::unique_ptr<AbstractConnection> connection); 
+  CommunicationWrapper& operator = (CommunicationWrapper&& other); 
+  CommunicationWrapper(CommunicationWrapper&& other); 
+  CommunicationWrapper(const CommunicationWrapper& other) = delete; 
+  CommunicationWrapper& operator = (const CommunicationWrapper& other) = delete;  
   ~CommunicationWrapper(); 
   /*
    * This function gets the next command from the connection and returns it as string.

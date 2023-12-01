@@ -14,7 +14,7 @@ public:
    * @throws SocketCreationException if socket creation fails
    */
   PasiveStartedConnection(const TCPListener& tcp_listener);
-  PasiveStartedConnection(const AbstractConnection& other) = delete;
+  PasiveStartedConnection(const PasiveStartedConnection& other) = delete;
   PasiveStartedConnection& operator = (const PasiveStartedConnection& other) = delete;
 
   PasiveStartedConnection(PasiveStartedConnection&& other);

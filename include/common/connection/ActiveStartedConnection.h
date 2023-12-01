@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include <string>
 #include "common/connection/AbstractConnection.h"
+#include <memory>
+#include <sys/socket.h>
 
 class ActiveStartedConnection: public AbstractConnection{ 
 public: 
@@ -14,7 +16,12 @@ public:
    * @throws SocketCreationException if socket creation fails
    */
   ActiveStartedConnection(const std::string& host, uint16_t port);
-  ActiveStartedConnection(const AbstractConnection& other) = delete;
+  /* 
+   * Constructor for active started connection, using sockaddr struct
+   * @throws SocketCreationException if socket creation fails
+   */
+  ActiveStartedConnection(std::unique_ptr<sockaddr> sock_addr);
+  ActiveStartedConnection(const ActiveStartedConnection& other) = delete;
   ActiveStartedConnection& operator = (const ActiveStartedConnection& other) = delete;
 
   ActiveStartedConnection(ActiveStartedConnection&& other);
