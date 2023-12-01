@@ -1,6 +1,12 @@
 #include "server/ServerProtocolInterpreter.h"
+#include "common/connection/ActiveStartedConnection.h"
+#include "common/connection/PasiveStartedConnection.h"
 #include "common/connection/exceptions.h"
 #include "common/exceptions.h"
+#include "common/modes/StreamMode.h"
+#include "common/types/AbstractType.h"
+#include "common/types/ImageType.h"
+#include "common/types/exceptions.h"
 #include "server/exceptions.h"
 #include <cstring>
 #include <sstream>
@@ -297,13 +303,97 @@ void ServerProtocolInterpreter::handle_pasv_command(const vector<string>& args) 
   }
   
   int port = this->data_listener->getPort();
+
   string port_string = to_string(port / 256) + "," + to_string(port % 256);
 
   connection->send_next_command("227 Entering Passive Mode (" + host_string + "," + port_string + ")");
 }
 
-void ServerProtocolInterpreter::handle_retr_command(const vector<string>& args) {}
-void ServerProtocolInterpreter::handle_stor_command(const vector<string>& args) {};
+void ServerProtocolInterpreter::handle_retr_command(const vector<string>& args) {
+  if(!loggedIn) {
+    this->connection->send_next_command("530 Not logged in.");
+    return;
+  }
+  
+  if(args.size() != 2) {
+    this->connection->send_next_command("500 Syntax error, command unrecognized.");
+    return ;
+  }
+  
+  unique_ptr<AbstractReadType> read_type;
+  try {
+    switch(this->type) {
+      case IMAGE: read_type = make_unique<ImageReadType>(args[1]);break;
+    } 
+  } catch(const ReadFileException& ex) {
+    this->connection->send_next_command("550 Requested action not taken. File unavailable.");
+    return ;
+  }
+
+  this->connection->send_next_command("150 File status ok; about to open data connection");
+
+  unique_ptr<AbstractConnection> connection;
+  try {
+    if(this->data_listener == nullopt) {
+      connection = make_unique<ActiveStartedConnection>(client_sock_addr);
+    } else {
+      connection = make_unique<PasiveStartedConnection>(*this->data_listener);
+    }
+  } catch(SocketCreationException& ex) {
+    this->connection->send_next_command("425 Can't open data connection.");
+  }
+
+  switch(this->mode) {
+    case STREAM: StreamMode::send(move(connection), move(read_type));break;
+  }
+  this->connection->send_next_command("226 Transfer complete.");
+  // Compiler barrier to prevent reordering
+  asm volatile("" : : : "memory");
+  this->data_listener = nullopt;
+}
+
+void ServerProtocolInterpreter::handle_stor_command(const vector<string>& args) {
+  if(!loggedIn) {
+    this->connection->send_next_command("530 Not logged in.");
+    return;
+  }
+  
+  if(args.size() != 2) {
+    this->connection->send_next_command("500 Syntax error, command unrecognized.");
+    return ;
+  }
+  
+  unique_ptr<AbstractWriteType> write_type;
+  try {
+    switch(this->type) {
+      case IMAGE: write_type = make_unique<ImageWriteType>(args[1]);break;
+    } 
+  } catch(const ReadFileException& ex) {
+    this->connection->send_next_command("550 Requested action not taken. File unavailable.");
+    return ;
+  }
+
+  unique_ptr<AbstractConnection> connection;
+  try {
+    if(this->data_listener == nullopt) {
+      this->connection->send_next_command("150 File status ok; about to open data connection");
+      connection = make_unique<ActiveStartedConnection>(client_sock_addr);
+    } else {
+      this->connection->send_next_command("150 File status ok; Ok to send data");
+      connection = make_unique<PasiveStartedConnection>(*this->data_listener);
+    }
+  } catch(SocketCreationException& ex) {
+    this->connection->send_next_command("425 Can't open data connection.");
+  }
+
+  switch(this->mode) {
+    case STREAM: StreamMode::recv(move(connection), move(write_type));break;
+  }
+  this->connection->send_next_command("226 Transfer complete.");
+  // Compiler barrier to prevent reordering
+  asm volatile("" : : : "memory");
+  this->data_listener = nullopt;
+};
 
 void ServerProtocolInterpreter::handle_noop_command(const vector<string>& args) {
   if(args.size() != 1) {

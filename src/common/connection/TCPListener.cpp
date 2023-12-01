@@ -7,7 +7,7 @@
 #include <cstring>
 #include <netinet/in.h>
 
-TCPListener::TCPListener(std::unique_ptr<sockaddr, std::function<void (sockaddr*)>> sock_addr) {
+TCPListener::TCPListener(std::unique_ptr<sockaddr, std::function<void (sockaddr*)>> &sock_addr) {
   this->fd = socket(AF_INET, SOCK_STREAM, 0);
   if(this->fd == -1) {
     throw SocketCreationException("Error creating socket");

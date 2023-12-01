@@ -9,7 +9,7 @@
 
 using namespace std;
 
-ActiveStartedConnection::ActiveStartedConnection(std::unique_ptr<sockaddr> sock_addr) {
+ActiveStartedConnection::ActiveStartedConnection(const std::unique_ptr<sockaddr, function<void(sockaddr*)>> &sock_addr) {
   const sockaddr* sock_addr_c_ptr = sock_addr.get();
   this->fd = socket(AF_INET, SOCK_STREAM, 0);
   if(this->fd == -1) {

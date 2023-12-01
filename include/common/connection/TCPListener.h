@@ -20,7 +20,7 @@ public:
    * Constructor for TCP listener using sockaddr c struct
    * @throws SocketCreationException if socket creation fails
    */
-  TCPListener(std::unique_ptr<sockaddr, std::function<void(sockaddr*)>> sock_addr);
+  TCPListener(std::unique_ptr<sockaddr, std::function<void(sockaddr*)>> &sock_addr);
   TCPListener(const TCPListener& other) = delete;
   TCPListener& operator = (const TCPListener &other) = delete;
   TCPListener(TCPListener&& other);

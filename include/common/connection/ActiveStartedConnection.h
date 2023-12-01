@@ -6,6 +6,7 @@
 #include "common/connection/AbstractConnection.h"
 #include <memory>
 #include <sys/socket.h>
+#include <functional>
 
 class ActiveStartedConnection: public AbstractConnection{ 
 public: 
@@ -20,7 +21,7 @@ public:
    * Constructor for active started connection, using sockaddr struct
    * @throws SocketCreationException if socket creation fails
    */
-  ActiveStartedConnection(std::unique_ptr<sockaddr> sock_addr);
+  ActiveStartedConnection(const std::unique_ptr<sockaddr, std::function<void(sockaddr*)> > &sock_addr);
   ActiveStartedConnection(const ActiveStartedConnection& other) = delete;
   ActiveStartedConnection& operator = (const ActiveStartedConnection& other) = delete;
 
