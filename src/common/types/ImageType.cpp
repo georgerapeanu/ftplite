@@ -82,7 +82,7 @@ ImageWriteType::~ImageWriteType() {
 
 ImageWriteType::ImageWriteType(const std::string& path) {
   this->buffer = NULL;
-  this->fd = open(path.c_str(), O_WRONLY | O_CREAT, 0666);
+  this->fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
   if(this->fd == -1) {
     throw WriteFileException("Error opening write file");

@@ -16,7 +16,6 @@ namespace StreamMode {
   void send(std::unique_ptr<AbstractConnection> connection, std::unique_ptr<AbstractReadType> read_type);
   /*
    * Receives a file using the write FTP type format over the connection
-   * @throws ConnectionClosedException if connection closes
    * @throws WriteFileException if writing fails
    */
   void recv(std::unique_ptr<AbstractConnection> connection, std::unique_ptr<AbstractWriteType> write_type);

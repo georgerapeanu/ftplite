@@ -1,4 +1,5 @@
 #include "common/modes/StreamMode.h"
+#include "common/connection/exceptions.h"
 #include "common/types/exceptions.h"
 
 #include <memory>
@@ -36,14 +37,18 @@ void StreamMode::recv(std::unique_ptr<AbstractConnection> connection, std::uniqu
   size_t buffer_len = 0;
   unsigned char* buffer = (unsigned char*)malloc(BUFFER_SIZE);
 
-  while(true) {
-    buffer_len = connection->read(buffer, BUFFER_SIZE);
-    if(buffer_len == 0) {
-      break;
-    }
-    for(size_t i = 0; i < buffer_len; i++) {
-      write_type->write_next_byte(buffer[i]);
-    }
+  try {
+    while(true) {
+      buffer_len = connection->read(buffer, BUFFER_SIZE);
+      if(buffer_len == 0) {
+        break;
+      }
+      for(size_t i = 0; i < buffer_len; i++) {
+        write_type->write_next_byte(buffer[i]);
+      }
+    } 
+  } catch(const ConnectionClosedException &ex) {
+    free(buffer);
+    ;
   }
-  free(buffer);
 }
