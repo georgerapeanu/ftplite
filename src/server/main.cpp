@@ -16,12 +16,18 @@ void sigchld_handler(int) {
   wait(NULL);
 }
 
+optional<TCPListener> listener;
+unique_ptr<AbstractConnection> server;
+
 void sigint_handler(int) {
+  server.~unique_ptr<AbstractConnection>();
+  listener.~optional<TCPListener>();
   exit(0);
 }
 
 int main(int argc, char** argv) {
   signal(SIGCHLD, sigchld_handler);
+  signal(SIGINT, sigint_handler);
 
   if(argc != 2) {
     cout << "Usage: " << argv[0] << " <PORT>\n";
@@ -39,16 +45,17 @@ int main(int argc, char** argv) {
     cout << "Invalid port value\n";
   }
 
-  auto listener = TCPListener((uint16_t)port);
+  listener = TCPListener((uint16_t)port);
 
   while(true) {
     try {
-      unique_ptr<AbstractConnection> server = make_unique<PasiveStartedConnection>(listener);
+      server = make_unique<PasiveStartedConnection>(*listener);
       if(fork() == 0) {
         auto pi = ServerProtocolInterpreter(move(server));
         pi.run();
         server.reset();
         pi.~ServerProtocolInterpreter();
+        listener.~optional<TCPListener>();
         exit(0);
       }
       server->move_to_child();

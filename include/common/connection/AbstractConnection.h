@@ -20,7 +20,7 @@ public:
   AbstractConnection& operator = (const AbstractConnection& other) = delete;
   AbstractConnection(AbstractConnection&& other);
   AbstractConnection& operator = (AbstractConnection&& other);
-  virtual ~AbstractConnection() = 0;
+  virtual ~AbstractConnection();
 
   /* 
    * Reads count bytes from connection into buffer buff. 
