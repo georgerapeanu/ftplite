@@ -11,6 +11,10 @@ void StreamMode::send(std::unique_ptr<AbstractConnection> connection, std::uniqu
   size_t buffer_pos = 0;
   unsigned char* buffer = (unsigned char*)malloc(BUFFER_SIZE);
 
+  if(buffer == NULL) {
+    throw AppException("malloc failed");
+  }
+
   try {
     while(true) {
       unsigned char next_byte = read_type->read_next_byte();
@@ -36,6 +40,10 @@ void StreamMode::send(std::unique_ptr<AbstractConnection> connection, std::uniqu
 void StreamMode::recv(std::unique_ptr<AbstractConnection> connection, std::unique_ptr<AbstractWriteType> write_type) {
   size_t buffer_len = 0;
   unsigned char* buffer = (unsigned char*)malloc(BUFFER_SIZE);
+  
+  if(buffer == NULL) {
+    throw AppException("malloc failed");
+  }
 
   try {
     while(true) {
@@ -48,7 +56,10 @@ void StreamMode::recv(std::unique_ptr<AbstractConnection> connection, std::uniqu
       }
     } 
   } catch(const ConnectionClosedException &ex) {
-    free(buffer);
     ;
+  } catch(const AppException &ex) {
+    free(buffer);
+    throw ex;
   }
+  free(buffer);
 }

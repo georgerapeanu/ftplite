@@ -86,6 +86,7 @@ size_t AbstractConnection::write(const void* buff, size_t len) {
   }
 
   if(cnt == 0) {
+    close(this->fd);
     this->fd = -1;
   }
 
@@ -106,11 +107,16 @@ AbstractConnection& AbstractConnection::operator = (AbstractConnection&& other) 
 AbstractConnection::~AbstractConnection() {
   if(this->fd != -1) {
     shutdown(this->fd, SHUT_RDWR);
+    close(this->fd);
+    this->fd = -1;
   }
 }
   
 unique_ptr<sockaddr, function<void(sockaddr*)>> AbstractConnection::getSocketSockAddr() const {
   sockaddr* sock_addr_c_ptr = (sockaddr*)malloc(sizeof(sockaddr));
+  if(sock_addr_c_ptr == NULL) {
+    throw SockAddrException("Malloc failed");
+  }
   memset(sock_addr_c_ptr, 0, sizeof(sockaddr));
 
   socklen_t sockaddr_len = sizeof(sockaddr);
@@ -125,12 +131,15 @@ unique_ptr<sockaddr, function<void(sockaddr*)>> AbstractConnection::getSocketSoc
 
 unique_ptr<sockaddr, function<void(sockaddr*)>> AbstractConnection::getPeerSockAddr() const {
   sockaddr* sock_addr_c_ptr = (sockaddr*)malloc(sizeof(sockaddr));
+  if(sock_addr_c_ptr == NULL) {
+    throw SockAddrException("Malloc failed");
+  }
   memset(sock_addr_c_ptr, 0, sizeof(sockaddr));
 
   socklen_t sockaddr_len = sizeof(sockaddr);
-  if(getsockname(this->fd, sock_addr_c_ptr, &sockaddr_len) == -1) {
+  if(getpeername(this->fd, sock_addr_c_ptr, &sockaddr_len) == -1) {
     free(sock_addr_c_ptr);
-    throw SockAddrException("Get sockname failed");
+    throw SockAddrException("Get peername failed");
   }
 
   unique_ptr<sockaddr, function<void(sockaddr*)> > sock_addr(sock_addr_c_ptr, [](sockaddr* sock_addr){free(sock_addr);});
@@ -138,5 +147,6 @@ unique_ptr<sockaddr, function<void(sockaddr*)>> AbstractConnection::getPeerSockA
 }
 
 void AbstractConnection::move_to_child() {
+  close(this->fd);
   this->fd = -1;
 }

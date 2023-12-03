@@ -7,6 +7,7 @@ AbstractReadType::AbstractReadType() {};
 AbstractReadType::~AbstractReadType() {
   if(this->fd != -1) {
     close(this->fd);
+    this->fd = -1;
   }
 }
 
@@ -27,6 +28,7 @@ AbstractWriteType::AbstractWriteType() {};
 AbstractWriteType::~AbstractWriteType() {
   if(this->fd != -1) {
     close(this->fd);
+    this->fd = -1;
   }
 }
 

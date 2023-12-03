@@ -9,6 +9,9 @@ ImageReadType::~ImageReadType() {
   if(this->buffer != NULL) {
     free(this->buffer);
   }
+  if(this->fd != -1) {
+    close(this->fd);
+  }
   AbstractReadType::~AbstractReadType();
 }
 
@@ -21,6 +24,10 @@ ImageReadType::ImageReadType(const std::string& path) {
   this->buffer_pos = 0;
   this->buffer_len = 0;
   this->buffer = (unsigned char*)malloc(BUFFER_SIZE);
+  if(this->buffer == NULL) {
+    close(this->fd);
+    throw ReadFileException("Error allocating buffer");
+  }
   memset(this->buffer, 0, BUFFER_SIZE);
 }
 
@@ -60,7 +67,6 @@ unsigned char ImageReadType::read_next_byte() {
     }
 
     if(cnt == 0) {
-      close(this->fd);
       throw TypeIterationEndedException("Read whole file");
     }
 
@@ -71,11 +77,16 @@ unsigned char ImageReadType::read_next_byte() {
 }
 
 ImageWriteType::~ImageWriteType() {
-  if(this->buffer_pos != 0) {
+  if(this->fd != -1 && this->buffer_pos != 0) {
     write(this->fd, this->buffer, this->buffer_pos);
   }
+ 
   if(this->buffer != NULL) {
     free(this->buffer);
+  }
+  
+  if(this->fd != -1) {
+    close(this->fd);
   }
   AbstractWriteType::~AbstractWriteType();
 }
@@ -90,6 +101,9 @@ ImageWriteType::ImageWriteType(const std::string& path) {
 
   this->buffer_pos = 0;
   this->buffer = (unsigned char*)malloc(BUFFER_SIZE);
+  if(buffer == NULL) {
+    throw AppException("malloc failed");
+  }
   memset(this->buffer, 0, BUFFER_SIZE);
 }
 

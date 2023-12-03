@@ -47,6 +47,8 @@ int main(int argc, char** argv) {
       if(fork() == 0) {
         auto pi = ServerProtocolInterpreter(move(server));
         pi.run();
+        server.reset();
+        pi.~ServerProtocolInterpreter();
         exit(0);
       }
       server->move_to_child();
