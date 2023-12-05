@@ -103,6 +103,9 @@ void ClientProtocolInterpreter::handle_pass_command(const std::vector<std::strin
 
         // Read password
         std::cin >> password;
+        if(!std::cin) {
+          throw AppException("Client over");
+        }
         tcsetattr(STDIN_FILENO, TCSANOW, &old_termios); // Restore terminal settings
 
         std::cout << std::endl;
@@ -223,6 +226,11 @@ void ClientProtocolInterpreter::run() {
             std::string full_command;
             std::getline(std::cin, full_command); // Read the entire line
 
+            if(!std::cin) {
+              this->handle_quit_command(emptyArgs);
+              break;
+            }
+
             std::istringstream iss(full_command);
             std::vector<std::string> parts;
             std::string part;
@@ -241,7 +249,7 @@ void ClientProtocolInterpreter::run() {
 
             if (main_command == "QUIT") {
                 this->handle_quit_command(emptyArgs);
-                exit(0);
+                break;
             } else if (main_command == "USER") {
                 // Handle USER command with arguments (if any)
                 parts.erase(parts.begin()); // Remove the main command from parts

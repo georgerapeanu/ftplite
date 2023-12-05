@@ -60,11 +60,10 @@ int main(int argc, char** argv) {
     }
 
 
-    while(true) {
-        try {
-            client = std::make_unique<ActiveStartedConnection>(host, port);
-            auto pi = ClientProtocolInterpreter(std::move(client));
-            pi.run();
+    try {
+        client = std::make_unique<ActiveStartedConnection>(host, port);
+        auto pi = ClientProtocolInterpreter(std::move(client));
+        pi.run();
 //
 //            if(fork() == 0) {
 //                server.reset();
@@ -73,9 +72,8 @@ int main(int argc, char** argv) {
 //                exit(0);
 //            }
 //            server->move_to_child();
-        } catch(const AppException& ex) {
-            std::cerr << ex.what();
-        }
+    } catch(const AppException& ex) {
+        std::cerr << ex.what();
     }
 
     return 0;
