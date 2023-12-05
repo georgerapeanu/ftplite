@@ -9,7 +9,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/target/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/target/lib)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_executable(client include/client/ClientProtocolInterpreter.h src/client/ClientProtocolInterpreter.cpp)
+add_executable(client)
 add_executable(server)
 
 include_directories(include)
