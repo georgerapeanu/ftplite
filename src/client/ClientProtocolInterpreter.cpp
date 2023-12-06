@@ -10,6 +10,7 @@
 #include "common/modes/StreamMode.h"
 #include "common/types/AbstractType.h"
 #include "common/types/ImageType.h"
+#include "common/types/ASCIIType.h"
 #include "common/types/exceptions.h"
 #include "client/exceptions.h"
 #include <cstring>
@@ -27,7 +28,7 @@
 
 
 ClientProtocolInterpreter::ClientProtocolInterpreter(std::unique_ptr<AbstractConnection> connection):
-        type(IMAGE),
+        type(ASCII),
         mode(STREAM),
         stru(STRU_FILE),
         user(std::nullopt),
@@ -243,6 +244,7 @@ void ClientProtocolInterpreter::handle_retr_command(const std::vector<std::strin
     try {
         switch(this->type) {
             case IMAGE: write_type = make_unique<ImageWriteType>(args[0]);break;
+            case ASCII: write_type = make_unique<ASCIIWriteType>(args[0]);break;
         }
     } catch(const WriteFileException& ex) {
         this->connection->send_next_command("550 Requested action not taken. File unavailable.");
@@ -296,6 +298,7 @@ void ClientProtocolInterpreter::handle_stor_command(const std::vector<std::strin
     try {
         switch(this->type) {
             case IMAGE: read_type = make_unique<ImageReadType>(args[0]);break;
+            case ASCII: read_type = make_unique<ASCIIReadType>(args[0]);break;
         }
     } catch(const ReadFileException& ex) {
         std::cout << ex.what() << std::endl;

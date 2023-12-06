@@ -12,7 +12,8 @@
 #include "common/connection/TCPListener.h"
 
 enum TypeEnum {
-    IMAGE
+    IMAGE,
+    ASCII
 };
 
 enum ModeEnum {

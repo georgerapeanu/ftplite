@@ -4,6 +4,7 @@
 #include "common/connection/exceptions.h"
 #include "common/exceptions.h"
 #include "common/modes/StreamMode.h"
+#include "common/types/ASCIIType.h"
 #include "common/types/AbstractType.h"
 #include "common/types/ImageType.h"
 #include "common/types/exceptions.h"
@@ -23,7 +24,7 @@
 using namespace std;
 
 ServerProtocolInterpreter::ServerProtocolInterpreter(std::unique_ptr<AbstractConnection> connection): 
-  type(IMAGE), 
+  type(ASCII), 
   mode(STREAM), 
   stru(STRU_FILE), 
   user(nullopt), 
@@ -72,13 +73,13 @@ void ServerProtocolInterpreter::handle_type_command(const vector<string>& args) 
   
   char type_code = args[1][0];
 
-  if(type_code != 'I') {
-    connection->send_next_command("504 Command not implemented for that parameter.");
-    return ;
-  }
-
   if(type_code == 'I') {
     this->type = IMAGE;
+  } else if(type_code == 'A') {
+    this->type = ASCII;
+  } else {
+    connection->send_next_command("504 Command not implemented for that parameter.");
+    return ;
   }
 
   connection->send_next_command("200 Command okay");
@@ -326,6 +327,7 @@ void ServerProtocolInterpreter::handle_retr_command(const vector<string>& args) 
   try {
     switch(this->type) {
       case IMAGE: read_type = make_unique<ImageReadType>(args[1]);break;
+      case ASCII: read_type = make_unique<ASCIIReadType>(args[1]);break;
     } 
   } catch(const ReadFileException& ex) {
     this->connection->send_next_command("550 Requested action not taken. File unavailable.");
@@ -369,6 +371,7 @@ void ServerProtocolInterpreter::handle_stor_command(const vector<string>& args) 
   try {
     switch(this->type) {
       case IMAGE: write_type = make_unique<ImageWriteType>(args[1]);break;
+      case ASCII: write_type = make_unique<ASCIIWriteType>(args[1]);break;
     } 
   } catch(const WriteFileException& ex) {
     this->connection->send_next_command("550 Requested action not taken. File unavailable.");

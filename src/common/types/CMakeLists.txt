@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.22)
 project(ftplite)
 
-target_sources(${target} PRIVATE AbstractType.cpp ImageType.cpp)
+target_sources(${target} PRIVATE AbstractType.cpp ASCIIType.cpp ImageType.cpp)

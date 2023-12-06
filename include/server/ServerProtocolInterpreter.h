@@ -9,6 +9,7 @@
 #include <vector>
 
 enum TypeEnum {
+  ASCII, 
   IMAGE
 };
 
