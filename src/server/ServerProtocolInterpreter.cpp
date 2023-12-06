@@ -277,6 +277,8 @@ void ServerProtocolInterpreter::handle_port_command(const vector<string>& args) 
   );
   client_sock_addr.reset((sockaddr*)client_sock_addr_c_ptr);
 
+  this->data_listener = nullopt;
+
   connection->send_next_command("200 Command okay.");
 }
 
@@ -301,7 +303,7 @@ void ServerProtocolInterpreter::handle_pasv_command(const vector<string>& args) 
       it = ',';
     }
   }
-  
+ 
   int port = this->data_listener->getPort();
 
   string port_string = to_string(port / 256) + "," + to_string(port % 256);
@@ -330,17 +332,19 @@ void ServerProtocolInterpreter::handle_retr_command(const vector<string>& args) 
     return ;
   }
 
-  this->connection->send_next_command("150 File status ok; about to open data connection");
 
   unique_ptr<AbstractConnection> connection;
   try {
     if(this->data_listener == nullopt) {
+      this->connection->send_next_command("150 File status ok; about to open data connection");
       connection = make_unique<ActiveStartedConnection>(client_sock_addr);
     } else {
+      this->connection->send_next_command("150 File status ok; Ok to send data");
       connection = make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
     }
   } catch(SocketCreationException& ex) {
     this->connection->send_next_command("425 Can't open data connection.");
+    return ;
   }
 
   switch(this->mode) {
@@ -348,8 +352,6 @@ void ServerProtocolInterpreter::handle_retr_command(const vector<string>& args) 
   }
   this->connection->send_next_command("226 Transfer complete.");
   // Compiler barrier to prevent reordering
-  asm volatile("" : : : "memory");
-  this->data_listener = nullopt;
 }
 
 void ServerProtocolInterpreter::handle_stor_command(const vector<string>& args) {
@@ -379,20 +381,18 @@ void ServerProtocolInterpreter::handle_stor_command(const vector<string>& args) 
       this->connection->send_next_command("150 File status ok; about to open data connection");
       connection = make_unique<ActiveStartedConnection>(client_sock_addr);
     } else {
-      connection = make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
       this->connection->send_next_command("150 File status ok; Ok to send data");
+      connection = make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
     }
   } catch(SocketCreationException& ex) {
     this->connection->send_next_command("425 Can't open data connection.");
+    return ;
   }
 
   switch(this->mode) {
     case STREAM: StreamMode::recv(move(connection), move(write_type));break;
   }
   this->connection->send_next_command("226 Transfer complete.");
-  // Compiler barrier to prevent reordering
-  asm volatile("" : : : "memory");
-  this->data_listener = nullopt;
 };
 
 void ServerProtocolInterpreter::handle_noop_command(const vector<string>& args) {

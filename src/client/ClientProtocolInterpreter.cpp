@@ -32,7 +32,7 @@ ClientProtocolInterpreter::ClientProtocolInterpreter(std::unique_ptr<AbstractCon
         stru(STRU_FILE),
         user(std::nullopt),
         loggedIn(false),
-        data_listener(std::nullopt) {
+        data_listener(0) {
 
     this->server_sock_addr = connection->getPeerSockAddr();
     this->client_sock_addr = connection->getSocketSockAddr();
@@ -76,7 +76,11 @@ void ClientProtocolInterpreter::handle_user_command(const std::vector<std::strin
     std::cout << "USER " << username << ":";
     // Send the command
 
-    std::getline(std::cin, username);
+    std::string user;
+    std::getline(std::cin, user);
+    if(user != "") {
+      username = user;
+    }
     command += username;
     connection->send_next_command(command);
 
@@ -131,6 +135,8 @@ void ClientProtocolInterpreter::first_login() {
     std::cout << connection->get_next_command() << std::endl;
     args.pop_back(); // send empty args param for password
     this->handle_pass_command(args);
+    args = {std::to_string(this->data_listener->getPort())};
+    this->handle_port_command(args);
 }
 
 void ClientProtocolInterpreter::handle_type_command(const std::vector<std::string> &args) {
@@ -163,8 +169,14 @@ void ClientProtocolInterpreter::handle_port_command(const std::vector<std::strin
     }
 
     int port = std::stoi(args[0]); // exceptie
+                                   //
+    if(this->data_listener) {
+      this->data_listener = std::nullopt;
+    }
 
     this->data_listener = TCPListener(port);
+
+    port = this->data_listener->getPort();
 
 
     std::string host_string(inet_ntoa(((sockaddr_in*)(client_sock_addr.get()))->sin_addr));
@@ -339,7 +351,7 @@ void ClientProtocolInterpreter::handle_pasv_command(const std::vector<std::strin
 
     sockaddr_in* server_sock_addr_c_ptr = (sockaddr_in*)(server_sock_addr.release());
     server_sock_addr_c_ptr->sin_port = htons(uint16_t(host_port_args[4] * 256 + host_port_args[5]));
-    std::cout << ntohs(server_sock_addr_c_ptr->sin_port) << std::endl;
+    std::cout << host_port_args[0] << "." << host_port_args[1] << "." << host_port_args[2] << "." << host_port_args[3] << ":" << ntohs(server_sock_addr_c_ptr->sin_port) << std::endl;
     inet_aton(
             (
                     std::to_string(host_port_args[0]) + "." +
@@ -380,9 +392,7 @@ void ClientProtocolInterpreter::run() {
 
         std::cout << connection->get_next_command() << std::endl;
         this->first_login();
-        std::vector<std::string> args;
-        args.push_back("27015");
-        this->handle_port_command(args);
+
         std::string command;
         std::vector<std::string> emptyArgs;
         bool firstRun = true;
