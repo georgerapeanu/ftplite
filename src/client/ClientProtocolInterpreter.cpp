@@ -143,7 +143,7 @@ void ClientProtocolInterpreter::first_login() {
 void ClientProtocolInterpreter::handle_type_command(const std::vector<std::string> &args) {
     std::string typeCommand = "TYPE ";
     if(args.size() != 1 || args[0].size() != 1) {
-        std::cout << "500 Syntax error, command unrecognized.";
+        std::cout << "500 Syntax error, command unrecognized.\nUSAGE TYPE [MODE]";
         return ;
     }
     typeCommand += args[0];
@@ -154,7 +154,7 @@ void ClientProtocolInterpreter::handle_type_command(const std::vector<std::strin
 void ClientProtocolInterpreter::handle_mode_command(const std::vector<std::string> &args) {
     std::string modeCommand = "MODE ";
     if(args.size() != 1 || args[0].size() != 1) {
-        std::cout << "500 Syntax error, command unrecognized.";
+        std::cout << "500 Syntax error, command unrecognized.\nUSAGE MODE [MODE]";
         return ;
     }
     modeCommand += args[0];
@@ -165,7 +165,7 @@ void ClientProtocolInterpreter::handle_mode_command(const std::vector<std::strin
 void ClientProtocolInterpreter::handle_port_command(const std::vector<std::string> &args) {
     std::string command = "PORT ";
     if(args.size() != 1){
-        std::cout << "500 Syntax error, command unrecognized.";
+        std::cout << "500 Syntax error, command unrecognized.\nUSAGE PORT [PORT]";
         return ;
     }
     command += args[0];
@@ -177,7 +177,7 @@ void ClientProtocolInterpreter::handle_port_command(const std::vector<std::strin
 void ClientProtocolInterpreter::handle_stru_command(const std::vector<std::string> &args) {
     std::string struCommand = "STRU ";
     if(args.size() != 1 || args[0].size() != 1) {
-        std::cout << "500 Syntax error, command unrecognized.";
+        std::cout << "500 Syntax error, command unrecognized.\nUSAGE STRU [MODE]";
         return ;
     }
     struCommand += args[0];
@@ -189,11 +189,11 @@ void ClientProtocolInterpreter::handle_stru_command(const std::vector<std::strin
 void ClientProtocolInterpreter::handle_retr_command(const std::vector<std::string> &args) {
     std::string command = "RETR ";
     if(args.size() != 1){
-        std::cout << "500 Syntax error, command unrecognized.";
+        std::cout << "500 Syntax error, command unrecognized.\nUSAGE RETR [FILE]";
         return ;
     }
     if(!this->check_string_users_portable_filename_character_set(args[0])){
-        std::cout << "500 Syntax error, command unrecognized.";
+        std::cout << "500 Syntax error, command unrecognized.\nUSAGE RETR [FILE]";
         return ;
     }
     command += args[0];
@@ -201,17 +201,69 @@ void ClientProtocolInterpreter::handle_retr_command(const std::vector<std::strin
     std::cout << connection->get_next_command() << std::endl;
 }
 
-void ClientProtocolInterpreter::handle_pasv_command(const std::vector<std::string> &args) {
+void ClientProtocolInterpreter::handle_stor_command(const std::vector<std::string> &args) {
+    std::string command = "STOR ";
+    if(args.size() != 1){
+        std::cout << "500 Syntax error, command unrecognized.\n USAGE STOR [FILE]";
+        return ;
+    }
+    if(!this->check_string_users_portable_filename_character_set(args[0])){
+        std::cout << "500 Syntax error, command unrecognized.\n USAGE STOR [FILE]";
+        return ;
+    }
 
+    command += args[0];
+    this->connection->send_next_command(command);
+    std::string result = this->connection->get_next_command();
+
+    if (result.compare(0, 3, "150") == 0) {
+        std::cout << result << std::endl;
+        std::cout << connection->get_next_command() << std::endl;
+    } else {
+        std::cout << result << std::endl;
+    }
 }
 
+void ClientProtocolInterpreter::handle_noop_command(const std::vector<std::string> &args) {
+    if (args.empty()){
+        std::cout << "500 Syntax error, command unrecognized.\nUSAGE NOOP";
+        return;
+    }
+    std::string command = "NOOP";
+    this->connection->send_next_command(command);
+    std::cout << connection->get_next_command() << std::endl;
 
-void ClientProtocolInterpreter::handle_quit_command(const std::vector<std::string> &args) {
-    this->connection->send_next_command("QUIT");
+}
+void ClientProtocolInterpreter::handle_pasv_command(const std::vector<std::string> &args) {
+    if (!args.empty()){
+        std::cout << "500 Syntax error, command unrecognized.\n USAGE PASV";
+        return;
+    }
+    std::string command = "PASV";
+    this->connection->send_next_command(command);
     std::cout << connection->get_next_command() << std::endl;
 }
 
 
+void ClientProtocolInterpreter::handle_quit_command(const std::vector<std::string> &args) {
+    if (!args.empty()){
+        std::cout << "500 Syntax error, command unrecognized.\n USAGE QUIT";
+        return;
+    }
+    this->connection->send_next_command("QUIT");
+    std::cout << connection->get_next_command() << std::endl;
+}
+
+void ClientProtocolInterpreter::handle_not_implemented_command(const std::vector<std::string> &args) {
+    if(!args.empty() && this->check_string_users_portable_filename_character_set(args[0])) {
+        connection->send_next_command(args[0]);
+        std::cout << connection->get_next_command() << std::endl;
+    }
+    else{
+        std::cout << "500 Syntax error, command unrecognized.";
+        return;
+    }
+}
 
 void ClientProtocolInterpreter::run() {
     try{
@@ -221,8 +273,12 @@ void ClientProtocolInterpreter::run() {
 
         std::string command;
         std::vector<std::string> emptyArgs;
+        bool firstRun = true;
         while(true){
-            std::cout << "\nftp> ";
+            if(firstRun)
+                firstRun = false;
+            else
+                std::cout << "\nftp> ";
             std::string full_command;
             std::getline(std::cin, full_command); // Read the entire line
 
@@ -274,9 +330,18 @@ void ClientProtocolInterpreter::run() {
             } else if (main_command == "RETR") {
                 parts.erase(parts.begin());
                 this->handle_retr_command(parts);
+            } else if (main_command == "STOR") {
+                parts.erase(parts.begin());
+                this->handle_stor_command(parts);
+            } else if (main_command == "NOOP") {
+                parts.erase(parts.begin());
+                this->handle_noop_command(parts);
+            } else if (main_command == "PASV") {
+                parts.erase(parts.begin());
+                this->handle_pasv_command(parts);
             }
             else {
-                std::cout << "Unknown command: " << main_command << std::endl;
+                this->handle_not_implemented_command(parts);
             }
 
         }
