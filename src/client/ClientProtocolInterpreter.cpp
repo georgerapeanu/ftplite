@@ -39,9 +39,9 @@ ClientProtocolInterpreter::ClientProtocolInterpreter(std::unique_ptr<AbstractCon
     CommunicationWrapper comm_wrapper(move(connection));
     this->connection = std::make_unique<CommunicationWrapper>(std::move(comm_wrapper));
 
-    sockaddr_in* client_sock_addr_c_ptr = (sockaddr_in*)(client_sock_addr.release());
-    client_sock_addr_c_ptr->sin_port = htons(21);
-    client_sock_addr.reset((sockaddr*)client_sock_addr_c_ptr);
+    sockaddr_in* server_sock_addr_c_ptr = (sockaddr_in*)(server_sock_addr.release());
+    server_sock_addr_c_ptr->sin_port = htons(21);
+    server_sock_addr.reset((sockaddr*)server_sock_addr_c_ptr);
 }
 
 bool ClientProtocolInterpreter::check_string_users_portable_filename_character_set(const std::string& s) {
@@ -66,25 +66,18 @@ bool ClientProtocolInterpreter::check_string_users_portable_filename_character_s
 
 void ClientProtocolInterpreter::handle_user_command(const std::vector<std::string> &args) {
     std::string command = "USER ";
-    std::string username;
+    std::string username = "";
     if(args.size() == 1) {
         if (this->check_string_users_portable_filename_character_set(args[0]))
-            username += args[0];
+            username = args[0];
         else
             throw LoginException("Invalid characters into username");
     }
-    else{
-        std::cout << "USER";
-        std::cin >> username;
-        if(!this->check_string_users_portable_filename_character_set(username))
-            throw LoginException("Invalid characters into username");
-    }
-    command += username;
-
+    std::cout << "USER " << username << ":";
     // Send the command
-    std::cout << "Name " + username + ": ";
-    std::string usern;
-    std::getline(std::cin, usern);
+
+    std::getline(std::cin, username);
+    command += username;
     connection->send_next_command(command);
 
 }
@@ -168,8 +161,21 @@ void ClientProtocolInterpreter::handle_port_command(const std::vector<std::strin
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE PORT [PORT]";
         return ;
     }
-    command += args[0];
-    this->connection->send_next_command(command);
+
+    int port = std::stoi(args[0]); // exceptie
+
+    this->data_listener = TCPListener(port);
+
+
+    std::string host_string(inet_ntoa(((sockaddr_in*)(client_sock_addr.get()))->sin_addr));
+    for(auto &it: host_string) {
+        if(it == '.') {
+            it = ',';
+        }
+    }
+
+    std::string port_string = std::to_string(port / 256) + "," + std::to_string(port % 256);
+    connection->send_next_command("PORT " + host_string + "," + port_string + "");
     std::cout << connection->get_next_command() << std::endl;
 }
 
@@ -198,7 +204,45 @@ void ClientProtocolInterpreter::handle_retr_command(const std::vector<std::strin
     }
     command += args[0];
     this->connection->send_next_command(command);
-    std::cout << connection->get_next_command() << std::endl;
+
+    std::string result = this->connection->get_next_command();
+
+    if (result.compare(0, 3, "150") == 0) {
+        std::cout << result << std::endl;
+    } else {
+        std::cout << result << std::endl;
+        return;
+    }
+
+    std::unique_ptr<AbstractConnection> connection;
+    try {
+        if(this->data_listener == std::nullopt) {
+            connection = std::make_unique<ActiveStartedConnection>(server_sock_addr);
+        } else {
+            connection = std::make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
+        }
+    } catch(SocketCreationException& ex) {
+        std::cout << ex.what() << std::endl;
+        return;
+    }
+
+
+    std::unique_ptr<AbstractWriteType> write_type;
+    try {
+        switch(this->type) {
+            case IMAGE: write_type = make_unique<ImageWriteType>(args[0]);break;
+        }
+    } catch(const WriteFileException& ex) {
+        this->connection->send_next_command("550 Requested action not taken. File unavailable.");
+        return ;
+    }
+
+    switch(this->mode) {
+        case STREAM: StreamMode::recv(move(connection), move(write_type));break;
+    }
+
+
+    std::cout << this->connection->get_next_command() << std::endl;
 }
 
 void ClientProtocolInterpreter::handle_stor_command(const std::vector<std::string> &args) {
@@ -215,13 +259,44 @@ void ClientProtocolInterpreter::handle_stor_command(const std::vector<std::strin
     command += args[0];
     this->connection->send_next_command(command);
     std::string result = this->connection->get_next_command();
-
-    if (result.compare(0, 3, "150") == 0) {
-        std::cout << result << std::endl;
-        std::cout << connection->get_next_command() << std::endl;
-    } else {
+    if(result.starts_with("150")){
         std::cout << result << std::endl;
     }
+    else{
+        std::cout << result << std::endl;
+        return;
+    }
+
+    std::unique_ptr<AbstractConnection> connection;
+    try {
+        if(this->data_listener == std::nullopt) {
+            connection = std::make_unique<ActiveStartedConnection>(server_sock_addr);
+        } else {
+            connection = std::make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
+        }
+    } catch(SocketCreationException& ex) {
+        std::cout << ex.what() << std::endl;
+        return;
+    }
+
+
+    std::unique_ptr<AbstractReadType> read_type;
+    try {
+        switch(this->type) {
+            case IMAGE: read_type = make_unique<ImageReadType>(args[0]);break;
+        }
+    } catch(const ReadFileException& ex) {
+        std::cout << ex.what() << std::endl;
+        return ;
+    }
+
+
+
+    switch(this->mode) {
+        case STREAM: StreamMode::send(move(connection), move(read_type));break;
+    }
+
+    std::cout << this->connection->get_next_command() << std::endl;
 }
 
 void ClientProtocolInterpreter::handle_noop_command(const std::vector<std::string> &args) {
@@ -239,9 +314,44 @@ void ClientProtocolInterpreter::handle_pasv_command(const std::vector<std::strin
         std::cout << "500 Syntax error, command unrecognized.\n USAGE PASV";
         return;
     }
+
+    // verifica args.size :D TODO
     std::string command = "PASV";
     this->connection->send_next_command(command);
-    std::cout << connection->get_next_command() << std::endl;
+    std::string response = this->connection->get_next_command();
+    std::cout << response << " ";
+    if(!response.starts_with("227 Entering Passive Mode (") || !response.ends_with(")")){
+        std::cout << "BAD GATEWAY";
+        return;
+    }
+    int drop_prefix_len = std::string("227 Entering Passive Mode (").size();
+    std::istringstream host_port_stream(response.substr(drop_prefix_len, response.size() -1 - drop_prefix_len));
+    std::vector<int> host_port_args;
+    std::string arg;
+    while(getline(host_port_stream, arg, ',')) {
+        try{
+            host_port_args.push_back(stoi(arg));
+        } catch(std::exception& ex) {
+            std::cout << ex.what() << std::endl;
+            return ;
+        }
+    }
+
+    sockaddr_in* server_sock_addr_c_ptr = (sockaddr_in*)(server_sock_addr.release());
+    server_sock_addr_c_ptr->sin_port = htons(uint16_t(host_port_args[4] * 256 + host_port_args[5]));
+    std::cout << ntohs(server_sock_addr_c_ptr->sin_port) << std::endl;
+    inet_aton(
+            (
+                    std::to_string(host_port_args[0]) + "." +
+                    std::to_string(host_port_args[1]) + "." +
+                    std::to_string(host_port_args[2]) + "." +
+                    std::to_string(host_port_args[3])
+            ).c_str(),
+            &server_sock_addr_c_ptr->sin_addr
+    );
+    server_sock_addr.reset((sockaddr*)server_sock_addr_c_ptr);
+
+    this->data_listener = std::nullopt;
 }
 
 
@@ -270,7 +380,9 @@ void ClientProtocolInterpreter::run() {
 
         std::cout << connection->get_next_command() << std::endl;
         this->first_login();
-
+        std::vector<std::string> args;
+        args.push_back("27015");
+        this->handle_port_command(args);
         std::string command;
         std::vector<std::string> emptyArgs;
         bool firstRun = true;
