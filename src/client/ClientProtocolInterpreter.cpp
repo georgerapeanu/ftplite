@@ -141,14 +141,28 @@ void ClientProtocolInterpreter::first_login() {
 }
 
 void ClientProtocolInterpreter::handle_type_command(const std::vector<std::string> &args) {
+
     std::string typeCommand = "TYPE ";
     if(args.size() != 1 || args[0].size() != 1) {
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE TYPE [MODE]";
         return ;
     }
+    TypeEnum next_type = IMAGE;
+    if(args[0] == "I") {
+      next_type = IMAGE;
+    } else if (args[0] == "A") {
+      next_type = ASCII;
+    } else {
+      std::cout << "unrecognized type\n";
+      return ;
+    }
     typeCommand += args[0];
     this->connection->send_next_command(typeCommand);
-    std::cout << connection->get_next_command() << std::endl;
+    std::string response = this->connection->get_next_command();
+    if(response.starts_with("200")) {
+      this->type = next_type;
+    }
+    std::cout << response << std::endl;
 }
 
 void ClientProtocolInterpreter::handle_mode_command(const std::vector<std::string> &args) {
