@@ -64,14 +64,6 @@ int main(int argc, char** argv) {
         client = std::make_unique<ActiveStartedConnection>(host, port);
         auto pi = ClientProtocolInterpreter(std::move(client));
         pi.run();
-//
-//            if(fork() == 0) {
-//                server.reset();
-//                pi.~ServerProtocolInterpreter();
-//                listener.~optional<TCPListener>();
-//                exit(0);
-//            }
-//            server->move_to_child();
     } catch(const AppException& ex) {
         std::cerr << ex.what();
     }
