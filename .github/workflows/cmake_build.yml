@@ -17,9 +17,7 @@ jobs:
       uses: lukka/run-cmake@v2
       with:
         cmakeListsOrSettingsJson: 'CMakeLists.txt'  # Path to your CMakeLists.txt file
-        buildDirectory: 'build'
-        installDirectory: 'target'
-        cmakeVersion: '3.21.3'  # Adjust to your CMake version
+        buildDirectory: 'target'
 
     - name: Build
       run: cmake --build build && make -j4
