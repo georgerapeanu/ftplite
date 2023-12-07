@@ -284,10 +284,7 @@ void ClientProtocolInterpreter::handle_retr_command(const std::vector<std::strin
         std::cout << "Syntax error, command unrecognized.\nUSAGE RETR [FILE]";
         return ;
     }
-    if(!this->check_string_users_portable_filename_character_set(args[0])){
-        std::cout << "Syntax error, command unrecognized.\nUSAGE RETR [FILE]";
-        return ;
-    }
+
     if(!loggedIn){
         std::cout << "Not logged in.\n";
         return ;
