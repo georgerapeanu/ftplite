@@ -79,8 +79,12 @@ void ClientProtocolInterpreter::handle_user_command(const std::vector<std::strin
 
     std::string user;
     std::getline(std::cin, user);
-    if(user != "") {
-      username = user;
+
+    if(user != "\n") {
+        if(this->check_string_users_portable_filename_character_set(user))
+            username = user;
+        else
+            throw LoginException("Invalid characters into username");
     }
     command += username;
     connection->send_next_command(command);
@@ -102,10 +106,11 @@ void ClientProtocolInterpreter::handle_pass_command(const std::vector<std::strin
         // Read password
         std::cin >> password;
         if(!std::cin) {
-          throw AppException("Client over");
+            throw AppException("Client over");
         }
         tcsetattr(STDIN_FILENO, TCSANOW, &old_termios); // Restore terminal settings
-
+        if(!this->check_string_users_portable_filename_character_set(password))
+            throw LoginException("Invalid characters into password");
         std::cout << std::endl;
         command += password;
         connection->send_next_command(command);
@@ -147,20 +152,24 @@ void ClientProtocolInterpreter::handle_type_command(const std::vector<std::strin
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE TYPE [MODE]";
         return ;
     }
+    if(!this->check_string_users_portable_filename_character_set(args[0])){
+        std::cout << "500 Syntax error, invalid characters.\n";
+        return ;
+    }
     TypeEnum next_type = IMAGE;
     if(args[0] == "I") {
-      next_type = IMAGE;
+        next_type = IMAGE;
     } else if (args[0] == "A") {
-      next_type = ASCII;
+        next_type = ASCII;
     } else {
-      std::cout << "unrecognized type\n";
-      return ;
+        std::cout << "unrecognized type\n";
+        return ;
     }
     typeCommand += args[0];
     this->connection->send_next_command(typeCommand);
     std::string response = this->connection->get_next_command();
     if(response.starts_with("200")) {
-      this->type = next_type;
+        this->type = next_type;
     }
     std::cout << response << std::endl;
 }
@@ -171,22 +180,38 @@ void ClientProtocolInterpreter::handle_mode_command(const std::vector<std::strin
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE MODE [MODE]";
         return ;
     }
+
+    if(args[0] != "S"){
+        std::cout << "504 Command not implemented for that parameter.\n";
+        return ;
+    }
+
     modeCommand += args[0];
     this->connection->send_next_command(modeCommand);
-    std::cout << connection->get_next_command() << std::endl;
+    std::string result = connection->get_next_command();
+    if(result.starts_with("200"))
+        std::cout << "200 Command okay" << std::endl;
+    else
+        std::cout << "503 Bad sequence of commands.\n";
 }
 
 void ClientProtocolInterpreter::handle_port_command(const std::vector<std::string> &args) {
-    std::string command = "PORT ";
     if(args.size() != 1){
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE PORT [PORT]";
         return ;
     }
 
-    int port = std::stoi(args[0]); // exceptie
-                                   //
+    int port;
+    try {
+        port = std::stoi(args[0]);
+    }
+    catch (const std::exception& e){
+        std::cout << e.what() << "\n";
+        return;
+    }
+
     if(this->data_listener) {
-      this->data_listener = std::nullopt;
+        this->data_listener = std::nullopt;
     }
 
     this->data_listener = TCPListener(port);
@@ -213,9 +238,22 @@ void ClientProtocolInterpreter::handle_stru_command(const std::vector<std::strin
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE STRU [MODE]";
         return ;
     }
+    if(!this->check_string_users_portable_filename_character_set(args[0])){
+        std::cout << "500 Syntax error, illegal characters\n";
+        return ;
+    }
+    if(args[0] != "F"){
+        std::cout << "504 Command not implemented for that parameter.\n";
+        return ;
+    }
+
     struCommand += args[0];
     this->connection->send_next_command(struCommand);
-    std::cout << connection->get_next_command() << std::endl;
+    std::string result = connection->get_next_command();
+    if(result.starts_with("200"))
+        std::cout << "200 Command okay" << std::endl;
+    else
+        std::cout << "503 Bad sequence of commands.\n";
 }
 
 
@@ -344,13 +382,12 @@ void ClientProtocolInterpreter::handle_pasv_command(const std::vector<std::strin
         return;
     }
 
-    // verifica args.size :D TODO
     std::string command = "PASV";
     this->connection->send_next_command(command);
     std::string response = this->connection->get_next_command();
     std::cout << response << " ";
     if(!response.starts_with("227 Entering Passive Mode (") || !response.ends_with(")")){
-        std::cout << "BAD GATEWAY";
+        std::cout << "502 BAD GATEWAY";
         return;
     }
     int drop_prefix_len = std::string("227 Entering Passive Mode (").size();
@@ -422,8 +459,8 @@ void ClientProtocolInterpreter::run() {
             std::getline(std::cin, full_command); // Read the entire line
 
             if(!std::cin) {
-              this->handle_quit_command(emptyArgs);
-              break;
+                this->handle_quit_command(emptyArgs);
+                break;
             }
 
             std::istringstream iss(full_command);
@@ -489,6 +526,7 @@ void ClientProtocolInterpreter::run() {
         std::cerr << ex.what() << "\n";
     }
 }
+
 
 
 
