@@ -32,7 +32,11 @@ for i in `ls`; do
   if [ -x $i ] ; then
     :
   else 
-    sudo diff $i ../server/$i 1>&2;
+    diff_msg=$(sudo diff $i ../server/$i);
+    if [ -n diff_msg ] ; then 
+      echo $diff_msg
+      exit 1 
+    fi
   fi
 done
 
