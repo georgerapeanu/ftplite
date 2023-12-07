@@ -87,6 +87,9 @@ unsigned char ASCIIReadType::read_next_byte() {
 }
 
 ASCIIWriteType::~ASCIIWriteType() {
+  if(this->previously_read_cr) {
+    this->write_next_byte('\r');
+  }
   if(this->fd != -1 && this->buffer_pos != 0) {
     write(this->fd, this->buffer, this->buffer_pos);
   }

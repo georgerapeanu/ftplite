@@ -98,6 +98,8 @@ void ClientProtocolInterpreter::handle_pass_command(const std::vector<std::strin
         std::cout << "Enter password: ";
         // Turn off terminal echoing
         struct termios old_termios, new_termios;
+        memset(&old_termios, 0, sizeof(old_termios));
+        memset(&new_termios, 0, sizeof(new_termios));
         tcgetattr(STDIN_FILENO, &old_termios);
         new_termios = old_termios;
         new_termios.c_lflag &= ~ECHO;
