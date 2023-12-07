@@ -22,4 +22,4 @@ jobs:
       run: cmake . && make -j4
 
     - name: Test
-      run: cd test-e2e/server && sudo ../../target/bin/server 20715 & sleep 5 && cd ../client && ./script.sh | ../../target/bin/client localhost 27015
+      run: cd test-e2e/server && sudo ../../target/bin/server 20715 & sleep 5 && cd test-e2e/client && ./script.sh | ../../target/bin/client localhost 27015
