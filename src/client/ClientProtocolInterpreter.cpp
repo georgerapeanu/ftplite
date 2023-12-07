@@ -80,7 +80,7 @@ void ClientProtocolInterpreter::handle_user_command(const std::vector<std::strin
     std::string user;
     std::getline(std::cin, user);
 
-    if(user != "\n") {
+    if(user != "") {
         if(this->check_string_users_portable_filename_character_set(user))
             username = user;
         else
