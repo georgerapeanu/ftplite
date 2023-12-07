@@ -123,9 +123,12 @@ void ClientProtocolInterpreter::handle_pass_command(const std::vector<std::strin
         if (dotPos != std::string::npos && dotPos + 1 < response.size()) {
             std::string statusCode = response.substr(0, dotPos);
             // Check if the extracted status code is "230"
-            if (statusCode == "230")
+            if (statusCode == "230"){
                 // Status code is 230 (Login successful)
+                this->loggedIn = true;
                 break;
+            }
+
         }
 
     } while(true);
@@ -158,6 +161,10 @@ void ClientProtocolInterpreter::handle_type_command(const std::vector<std::strin
         std::cout << "500 Syntax error, invalid characters.\n";
         return ;
     }
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
+        return ;
+    }
     TypeEnum next_type = IMAGE;
     if(args[0] == "I") {
         next_type = IMAGE;
@@ -187,6 +194,10 @@ void ClientProtocolInterpreter::handle_mode_command(const std::vector<std::strin
         std::cout << "504 Command not implemented for that parameter.\n";
         return ;
     }
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
+        return ;
+    }
 
     modeCommand += args[0];
     this->connection->send_next_command(modeCommand);
@@ -200,6 +211,10 @@ void ClientProtocolInterpreter::handle_mode_command(const std::vector<std::strin
 void ClientProtocolInterpreter::handle_port_command(const std::vector<std::string> &args) {
     if(args.size() != 1){
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE PORT [PORT]";
+        return ;
+    }
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
         return ;
     }
 
@@ -248,6 +263,10 @@ void ClientProtocolInterpreter::handle_stru_command(const std::vector<std::strin
         std::cout << "504 Command not implemented for that parameter.\n";
         return ;
     }
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
+        return ;
+    }
 
     struCommand += args[0];
     this->connection->send_next_command(struCommand);
@@ -267,6 +286,10 @@ void ClientProtocolInterpreter::handle_retr_command(const std::vector<std::strin
     }
     if(!this->check_string_users_portable_filename_character_set(args[0])){
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE RETR [FILE]";
+        return ;
+    }
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
         return ;
     }
     command += args[0];
@@ -323,6 +346,10 @@ void ClientProtocolInterpreter::handle_stor_command(const std::vector<std::strin
         std::cout << "500 Syntax error, command unrecognized.\n USAGE STOR [FILE]";
         return ;
     }
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
+        return ;
+    }
 
     command += args[0];
     this->connection->send_next_command(command);
@@ -373,6 +400,10 @@ void ClientProtocolInterpreter::handle_noop_command(const std::vector<std::strin
         std::cout << "500 Syntax error, command unrecognized.\nUSAGE NOOP";
         return;
     }
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
+        return ;
+    }
     std::string command = "NOOP";
     this->connection->send_next_command(command);
     std::cout << connection->get_next_command() << std::endl;
@@ -383,7 +414,10 @@ void ClientProtocolInterpreter::handle_pasv_command(const std::vector<std::strin
         std::cout << "500 Syntax error, command unrecognized.\n USAGE PASV";
         return;
     }
-
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
+        return ;
+    }
     std::string command = "PASV";
     this->connection->send_next_command(command);
     std::string response = this->connection->get_next_command();
@@ -427,6 +461,10 @@ void ClientProtocolInterpreter::handle_quit_command(const std::vector<std::strin
     if (!args.empty()){
         std::cout << "500 Syntax error, command unrecognized.\n USAGE QUIT";
         return;
+    }
+    if(!loggedIn){
+        std::cout << "530 Not logged in.\n";
+        return ;
     }
     this->connection->send_next_command("QUIT");
     std::cout << connection->get_next_command() << std::endl;
