@@ -26,7 +26,6 @@ echo "RETR server_ascii_active"
 
 sleep 5
 
-set -e
 echo "Showing diff" 1>&2
 for i in `ls`; do 
   if [ -x $i ] ; then
