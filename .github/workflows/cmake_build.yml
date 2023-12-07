@@ -1,0 +1,26 @@
+name: CMake Build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up CMake
+      uses: lukka/run-cmake@v2
+      with:
+        cmakeListsOrSettingsJson: 'CMakeLists.txt'  # Path to your CMakeLists.txt file
+        buildDirectory: 'build'
+        installDirectory: 'target'
+        cmakeVersion: '3.21.3'  # Adjust to your CMake version
+
+    - name: Build
+      run: cmake --build build && make -j4
+
