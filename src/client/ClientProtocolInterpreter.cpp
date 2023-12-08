@@ -289,20 +289,29 @@ void ClientProtocolInterpreter::handle_retr_command(const std::vector<std::strin
     command += args[0];
     this->connection->send_next_command(command);
 
-    std::string result = this->connection->get_next_command();
-
-    if (result.compare(0, 3, "150") == 0) {
-        std::cout << result << std::endl;
-    } else {
-        std::cout << result << std::endl;
-        return;
-    }
+//    std::string result = this->connection->get_next_command();
 
     std::unique_ptr<AbstractConnection> connection;
     try {
         if(this->data_listener == std::nullopt) {
             connection = std::make_unique<ActiveStartedConnection>(server_sock_addr);
+            std::string result = this->connection->get_next_command();
+            if(result.starts_with("150")){
+                std::cout << result << std::endl;
+            }
+            else{
+                std::cout << result << std::endl;
+                return;
+            }
         } else {
+            std::string result = this->connection->get_next_command();
+            if(result.starts_with("150")){
+                std::cout << result << std::endl;
+            }
+            else{
+                std::cout << result << std::endl;
+                return;
+            }
             connection = std::make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
         }
     } catch(SocketCreationException& ex) {
@@ -343,20 +352,28 @@ void ClientProtocolInterpreter::handle_stor_command(const std::vector<std::strin
 
     command += args[0];
     this->connection->send_next_command(command);
-    std::string result = this->connection->get_next_command();
-    if(result.starts_with("150")){
-        std::cout << result << std::endl;
-    }
-    else{
-        std::cout << result << std::endl;
-        return;
-    }
 
     std::unique_ptr<AbstractConnection> connection;
     try {
         if(this->data_listener == std::nullopt) {
             connection = std::make_unique<ActiveStartedConnection>(server_sock_addr);
+            std::string result = this->connection->get_next_command();
+            if(result.starts_with("150")){
+                std::cout << result << std::endl;
+            }
+            else{
+                std::cout << result << std::endl;
+                return;
+            }
         } else {
+            std::string result = this->connection->get_next_command();
+            if(result.starts_with("150")){
+                std::cout << result << std::endl;
+            }
+            else{
+                std::cout << result << std::endl;
+                return;
+            }
             connection = std::make_unique<PasiveStartedConnection>(*this->data_listener, 5000);
         }
     } catch(SocketCreationException& ex) {
