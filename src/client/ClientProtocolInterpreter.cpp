@@ -120,7 +120,7 @@ void ClientProtocolInterpreter::handle_pass_command(const std::vector<std::strin
         command = "PASS ";
         std::cout << response << std::endl;
         // Check if the extracted status code is "230"
-        if (response.starts_with("230 ")){
+        if (response.starts_with("230") && (response.size() < 4 || response[3] < '0' || response[3] > '9')){
             // Status code is 230 (Login successful)
             this->loggedIn = true;
             break;
