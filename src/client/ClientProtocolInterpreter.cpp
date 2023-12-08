@@ -136,7 +136,11 @@ void ClientProtocolInterpreter::handle_pass_command(const std::vector<std::strin
 
 void ClientProtocolInterpreter::first_login() {
     std::vector<std::string> args;
-    std::string username = getlogin();
+    std::string username;
+    char* login = getlogin();
+    if(login != NULL) {
+      username = login;
+    }
     if(username.empty())
         throw LoginException("Failed to retrieve the username.");
     if(!this->check_string_users_portable_filename_character_set(username))
