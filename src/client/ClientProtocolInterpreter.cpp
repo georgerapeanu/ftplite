@@ -119,16 +119,11 @@ void ClientProtocolInterpreter::handle_pass_command(const std::vector<std::strin
         std::string response = connection->get_next_command();
         command = "PASS ";
         std::cout << response << std::endl;
-        size_t dotPos = response.find('.');
-        if (dotPos != std::string::npos && dotPos + 1 < response.size()) {
-            std::string statusCode = response.substr(0, dotPos);
-            // Check if the extracted status code is "230"
-            if (statusCode == "230"){
-                // Status code is 230 (Login successful)
-                this->loggedIn = true;
-                break;
-            }
-
+        // Check if the extracted status code is "230"
+        if (response.starts_with("230 ")){
+            // Status code is 230 (Login successful)
+            this->loggedIn = true;
+            break;
         }
 
     } while(true);
@@ -417,12 +412,17 @@ void ClientProtocolInterpreter::handle_pasv_command(const std::vector<std::strin
     this->connection->send_next_command(command);
     std::string response = this->connection->get_next_command();
     std::cout << response << " ";
-    if(!response.starts_with("227 Entering Passive Mode (") || !response.ends_with(")")){
+    if(!response.starts_with("227 Entering Passive Mode (")){
         std::cout << "Failed to enter passive mode";
         return;
     }
     int drop_prefix_len = std::string("227 Entering Passive Mode (").size();
-    std::istringstream host_port_stream(response.substr(drop_prefix_len, response.size() -1 - drop_prefix_len));
+    std::string filtered_response = response.substr(drop_prefix_len, response.size() - drop_prefix_len);
+    while (filtered_response.size() > 0 && (filtered_response.back() > '9' || filtered_response.back() < '0')) {
+      filtered_response.pop_back();
+    }
+
+    std::istringstream host_port_stream(filtered_response);
     std::vector<int> host_port_args;
     std::string arg;
     while(getline(host_port_stream, arg, ',')) {
