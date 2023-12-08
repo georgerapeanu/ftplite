@@ -26,7 +26,6 @@ echo "RETR server_ascii_active"
 
 sleep 5
 
-set -e
 echo "Showing diff" 1>&2
 for i in `ls`; do 
   if [ -x $i ] ; then
@@ -34,7 +33,8 @@ for i in `ls`; do
   else 
     diff_msg=$(sudo diff $i ../server/$i);
     if [ -n diff_msg ] ; then 
-      echo $diff_msg
+      echo 1>&2 $diff_msg
+      echo 1>&2 "Diff failed"
       exit 1 
     fi
   fi

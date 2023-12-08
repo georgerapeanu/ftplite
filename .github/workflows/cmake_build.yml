@@ -25,6 +25,8 @@ jobs:
       run: |
         sudo useradd ftplite-server
         echo "ftplite-server:ftplite1" | sudo chpasswd
+        chmod 777 ./test-e2e/server 
+        chmod 777 ./test-e2e/client
 
     - name: Build
       run: cmake . && make -j4
