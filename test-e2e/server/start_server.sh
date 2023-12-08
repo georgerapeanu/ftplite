@@ -1,1 +1,1 @@
-cd test-e2e/server && sudo ../../target/bin/server 27015
+cd test-e2e/server && sudo valgrind ../../target/bin/server 27015
