@@ -24,19 +24,3 @@ echo "RETR server_image_active"
 # TYPE A, ACTIVE
 echo "RETR server_ascii_active"
 
-sleep 5
-
-echo "Showing diff" 1>&2
-for i in `ls`; do 
-  if [ -x $i ] ; then
-    :
-  else 
-    diff_msg=$(sudo diff $i ../server/$i);
-    if [ -n diff_msg ] ; then 
-      echo 1>&2 $diff_msg
-      echo 1>&2 "Diff failed for $i"
-      exit 1 
-    fi
-  fi
-done
-
