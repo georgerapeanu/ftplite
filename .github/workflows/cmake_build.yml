@@ -21,6 +21,11 @@ jobs:
     - name: Install Valgrind
       run: sudo apt-get install valgrind
 
+    - name: Add FTP User
+      run: |
+        sudo useradd ftplite-server
+        echo "ftplite-server:ftplite1" | sudo chpasswd
+
     - name: Build
       run: cmake . && make -j4
 

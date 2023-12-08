@@ -1,5 +1,5 @@
-echo "root"
-echo ""
+echo "ftplite-server"
+echo "ftplite1"
 # TYPE A, ACTIVE
 echo "STOR client_ascii_active"
 echo "TYPE I"
@@ -26,6 +26,7 @@ echo "RETR server_ascii_active"
 
 sleep 5
 
+set -e
 echo "Showing diff" 1>&2
 for i in `ls`; do 
   if [ -x $i ] ; then
