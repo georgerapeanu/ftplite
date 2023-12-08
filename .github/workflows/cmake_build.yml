@@ -18,6 +18,9 @@ jobs:
       with:
         buildDirectory: 'target'
 
+    - name: Install Valgrind
+      run: sudo apt-get install valgrind
+
     - name: Build
       run: cmake . && make -j4
 
