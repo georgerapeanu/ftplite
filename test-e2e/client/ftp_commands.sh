@@ -34,7 +34,7 @@ for i in `ls`; do
     diff_msg=$(sudo diff $i ../server/$i);
     if [ -n diff_msg ] ; then 
       echo 1>&2 $diff_msg
-      echo 1>&2 "Diff failed"
+      echo 1>&2 "Diff failed for $i"
       exit 1 
     fi
   fi
