@@ -141,8 +141,6 @@ void ClientProtocolInterpreter::first_login() {
     if(login != NULL) {
       username = login;
     }
-    if(username.empty())
-        throw LoginException("Failed to retrieve the username.");
     if(!this->check_string_users_portable_filename_character_set(username))
         throw LoginException("Invalid characters into username");
     args.emplace_back(username); // send the user that is logged in
